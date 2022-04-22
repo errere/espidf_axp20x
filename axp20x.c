@@ -256,6 +256,21 @@ esp_err_t axp_pmic_get_adc_resault(axp_adc_resault_t *dst)
     dst->battery_discharging_current = (tmp[23] << 5) | (tmp[24] & 0x1f);
     dst->IPS_voltage = AXP_BUILD_I12(tmp[25], tmp[26]);
 
+    //axp209 p25
+    dst->ACIN_voltage = (float)dst->ACIN_voltage * 1.7f;
+    dst->ACIN_current = (float)dst->ACIN_current * 0.625f;
+    dst->VBUS_voltage = (float)dst->VBUS_voltage * 1.7f;
+    dst->VBUS_current = (float)dst->VBUS_current * 0.375f;
+    dst->internal_temperature = (float)dst->internal_temperature * 0.1f;
+    dst->TS = (float)dst->TS * 0.8f;
+    dst->GPIO0 = (float)dst->GPIO0 * 0.5f;
+    dst->GPIO1 = (float)dst->GPIO1 * 0.5f;
+    //dst->battery_Instantaneous_power = (float)dst->battery_Instantaneous_power * 1.1f;
+    dst->battery_voltage = (float)dst->battery_voltage * 1.1f;
+    dst->battery_charging_current = (float)dst->battery_charging_current * 0.5f;
+    dst->battery_discharging_current = (float)dst->battery_discharging_current * 0.5f;
+    dst->IPS_voltage = (float)dst->IPS_voltage * 1.4f;
+
     return rc;
 }
 

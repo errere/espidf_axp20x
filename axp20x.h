@@ -30,7 +30,7 @@ struct
 
 /*===========================================================AXP LIB=====================================================*/
 
-#define AXP_IIC_DEV 1
+#define AXP_IIC_DEV I2C_NUM_0
 
 #define AXP_ADDRESS 0x34
 
@@ -39,23 +39,43 @@ struct
 
 //#define AXP_CHECK_CONN
 
-#define AXP_CHARGE_CONF_DEFAULT = {                                     \
-                                    .enable = 1,                        \
-                                    .target_voltage = 2,                \
-                                    .end_current = 0,                   \
-                                    .current = 500,                     \
-                                    .pre_charge_tomeout = 0,            \
-                                    .CHGLED_flash_config = 1,           \
-                                    .CC_mode_timeout = 0,               \
-                                    .backup_battery_enable = 1,         \
-                                    .backup_battery_target_voltage = 1, \
-                                    .backup_battery_current = 0,        \
-                                    .VLTF_charge = 2112,                \
-                                    .VHTF_charge = 397,                 \
-                                    .VLTF_discharge = 3226,             \
-                                    .VHTF_discharge = 282,              \
-}
+#define AXP_CHARGE_CONF_DEFAULT             \
+    {                                       \
+        .enable = 1,                        \
+        .target_voltage = 2,                \
+        .end_current = 0,                   \
+        .current = 500,                     \
+        .pre_charge_tomeout = 0,            \
+        .CHGLED_flash_config = 1,           \
+        .CC_mode_timeout = 0,               \
+        .backup_battery_enable = 1,         \
+        .backup_battery_target_voltage = 1, \
+        .backup_battery_current = 0,        \
+        .VLTF_charge = 2112,                \
+        .VHTF_charge = 397,                 \
+        .VLTF_discharge = 3226,             \
+        .VHTF_discharge = 282               \
+    }
 
+#define AXP_ADC_CONF_DEFAULT                           \
+    {                                                  \
+        .batt_voltage_enable = 1,                      \
+        .batt_current_enable = 1,                      \
+        .acin_voltage_enable = 1,                        \
+        .acin_current_enable = 1,                        \
+        .vbus_voltage_enable = 0,                      \
+        .vbus_current_enable = 0,                      \
+        .aps_voltage_enable = 1,                       \
+        .ts_pin_enable = 0,                            \
+        .internal_temperature_detection_enable = 1,    \
+        .GPIO1_analog_in_enable = 0,                   \
+        .GPIO0_analog_in_enable = 0,                   \
+        .sample_rate = 1,                              \
+        .gpio1_adc_range = 0,                          \
+        .gpio0_adc_range = 0,                          \
+        .gpio1_adc_interrupt_raising_Threshold = 0xff, \
+        .gpio1_adc_interrupt_falling_Threshold = 0x00  \
+    }
 // types
 
 /*====================READ ONLY====================*/
