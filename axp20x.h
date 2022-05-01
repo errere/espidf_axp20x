@@ -76,6 +76,47 @@ struct
         .gpio1_adc_interrupt_raising_Threshold = 0xff, \
         .gpio1_adc_interrupt_falling_Threshold = 0x00  \
     }
+
+#define AXP_IRQ_CONF_DEFAULT                               \
+    {                                                      \
+        .bit_config.ACIN_over_voltage_enable = 1,          \
+        .bit_config.ACIN_connect_enable = 0,               \
+        .bit_config.ACIN_disconnect_enable = 0,            \
+        .bit_config.VBUS_over_voltage = 0,                 \
+        .bit_config.VBUS_connect_enable = 0,               \
+        .bit_config.VBUS_disconnect_enable = 0,            \
+        .bit_config.VBUS_availiable_below_hold_enable = 0, \
+        .bit_config.battery_connect_enable = 0,            \
+        .bit_config.battery_disconnect_enable = 0,         \
+        .bit_config.battery_activation_enable = 1,         \
+        .bit_config.exit_battery_activation_enable = 0,    \
+        .bit_config.charging_int_enable = 0,               \
+        .bit_config.charge_finish_enable = 0,              \
+        .bit_config.battery_over_temperature_enable = 0,   \
+        .bit_config.battery_low_temperature_enable = 0,    \
+        .bit_config.axp_over_temperature_enable = 0,       \
+        .bit_config.charging_current_low_enable = 0,       \
+        .bit_config.DCDC2_output_low_enable = 0,           \
+        .bit_config.DCDC3_output_low_enable = 0,           \
+        .bit_config.LDO3_output_low_enable = 0,            \
+        .bit_config.PEK_short_press_enable = 1,            \
+        .bit_config.PEK_long_press_enable = 1,             \
+        .bit_config.NOE_poweron_enable = 0,                \
+        .bit_config.NOE_poweroff_enable = 0,               \
+        .bit_config.VBUS_valid_enable = 0,                 \
+        .bit_config.VBUS_invalid_enable = 0,               \
+        .bit_config.VBUS_session_AB_enable = 0,            \
+        .bit_config.VBUS_session_end_enable = 0,           \
+        .bit_config.APS_warning_level1_enable = 0,         \
+        .bit_config.APS_warning_level2_enable = 1,         \
+        .bit_config.timeout_enable = 0,                    \
+        .bit_config.PEK_raising_enable = 0,                \
+        .bit_config.PEK_filling_enable = 0,                \
+        .bit_config.GPIO3_input_edge_enable = 0,           \
+        .bit_config.GPIO2_input_edge_enable = 0,           \
+        .bit_config.GPIO1_input_enable = 0,                \
+        .bit_config.GPIO0_input_edge_enable = 0            \
+    }                                                      \
 // types
 
 /*====================READ ONLY====================*/

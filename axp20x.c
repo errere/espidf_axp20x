@@ -331,19 +331,29 @@ esp_err_t axp_pmic_irq_handle(axp_irq_status_t *dst)
     esp_err_t rc = ESP_OK;
     target_subAddr = 0x48;
     rc = axp_iic_readRegs(target_subAddr, 5, tmp);
+    // ESP_LOGI(TAG, "%x  %x  %x  %x  %x", tmp[0], tmp[1], tmp[2], tmp[3], tmp[4]);
     AXP_ERROR_CHECK(rc);
 
     for (uint8_t i = 0; i < 5; i++)
     {
-        dst->regmap |= (tmp[i] << (8 * i));
+        dst->regmap |= ((uint64_t)tmp[i] << (8 * i));
+        // ESP_LOGI(TAG,"i = %d  ,  tmp = %x   ,   dst = %llx",i,tmp[i],dst->regmap);
     }
 
     //向相应的状态寄存器位写 1 ,清除相应的中断
-    rc = axp_iic_writeRegs(target_subAddr, 5, tmp);
+    // rc = axp_iic_writeRegs(target_subAddr, 5, tmp);
+
+    rc = axp_iic_writeReg(0x48, tmp[0]);
+    AXP_ERROR_CHECK(rc);
+    rc = axp_iic_writeReg(0x49, tmp[1]);
+    AXP_ERROR_CHECK(rc);
+    rc = axp_iic_writeReg(0x4a, tmp[2]);
+    AXP_ERROR_CHECK(rc);
+    rc = axp_iic_writeReg(0x4b, tmp[3]);
+    AXP_ERROR_CHECK(rc);
+    rc = axp_iic_writeReg(0x4c, tmp[4]);
 
     return rc;
-
-    return ESP_OK;
 }
 
 /*====================write====================*/
@@ -1250,9 +1260,17 @@ esp_err_t axp_pmic_set_interrupt_config(axp_irq_config_t cfg)
     {
         tmp[i] = (cfg.regmap >> (8 * i)) & 0xff;
     }
-
-    rc = axp_iic_writeRegs(target_subAddr, 5, tmp);
-
+    //ESP_LOGI(TAG, "write: %x  %x  %x  %x  %x", tmp[0], tmp[1], tmp[2], tmp[3], tmp[4]);
+    //rc = axp_iic_writeRegs(target_subAddr, 5, tmp);
+    rc =axp_iic_writeReg(0x40,tmp[0]);
+    AXP_ERROR_CHECK(rc);
+    rc =axp_iic_writeReg(0x41,tmp[1]);
+    AXP_ERROR_CHECK(rc);
+    rc =axp_iic_writeReg(0x42,tmp[2]);
+    AXP_ERROR_CHECK(rc);
+    rc =axp_iic_writeReg(0x43,tmp[3]);
+    AXP_ERROR_CHECK(rc);
+    rc =axp_iic_writeReg(0x44,tmp[4]);
     return rc;
 }
 
