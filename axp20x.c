@@ -11,9 +11,16 @@
 #define AXP_ASSERT_BYTE(x, b) \
     AXP_ASSERT(((x) & (AXP_BIT((b)))))
 
-#define AXP_ERROR_CHECK(x) \
-    if ((x) != ESP_OK)     \
-    return x
+#define AXP_ERROR_CHECK(x)                                                                \
+    do                                                                                    \
+    {                                                                                     \
+        esp_err_t __err_rc__ = (x);                                                       \
+        if (__err_rc__ != ESP_OK)                                                         \
+        {                                                                                 \
+            ESP_LOGE(TAG, "error%d in line:%d  file:%s", __err_rc__, __LINE__, __FILE__); \
+            return __err_rc__;                                                            \
+        }                                                                                 \
+    } while (0)
 
 const static char *TAG = "axp_pmu";
 
@@ -113,24 +120,22 @@ static esp_err_t axp_iic_readRegs(uint8_t address, uint16_t len, uint8_t *dst)
 
     return ret;
 }
-static esp_err_t axp_iic_writeRegs(uint8_t address, uint8_t len, uint8_t *src)
-{
-#ifdef AXP_CHECK_CONN
-    AXP_ERROR_CHECK(axp_checkConnect);
-#endif
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, address, ACK_CHECK_EN);
-    // i2c_master_write_byte(cmd, src, ACK_CHECK_EN);
-    i2c_master_write(cmd, src, len, ACK_CHECK_EN);
-    i2c_master_stop(cmd);
-
-    esp_err_t ret = i2c_master_cmd_begin(AXP_IIC_DEV, cmd, portMAX_DELAY);
-
-    i2c_cmd_link_delete(cmd);
-    return ret;
-}
+// static esp_err_t axp_iic_writeRegs(uint8_t address, uint8_t len, uint8_t *src)
+// {
+// #ifdef AXP_CHECK_CONN
+//     AXP_ERROR_CHECK(axp_checkConnect);
+// #endif
+//     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+//     i2c_master_start(cmd);
+//     i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
+//     i2c_master_write_byte(cmd, address, ACK_CHECK_EN);
+//     // i2c_master_write_byte(cmd, src, ACK_CHECK_EN);
+//     i2c_master_write(cmd, src, len, ACK_CHECK_EN);
+//     i2c_master_stop(cmd);
+//     esp_err_t ret = i2c_master_cmd_begin(AXP_IIC_DEV, cmd, portMAX_DELAY);
+//     i2c_cmd_link_delete(cmd);
+//     return ret;
+// }
 
 /*====================RT APi====================*/
 esp_err_t axp_pmic_poweroff(uint8_t allow_gpio_weakUp)
@@ -308,7 +313,6 @@ uint8_t axp_pmic_get_gpio_status(axp_gpio_channel_t ch)
 /*====================read====================*/
 esp_err_t axp_pmic_read_data_ram(axp_data_flash_t *dst)
 {
-    uint8_t target_subAddr = 0x04;
     esp_err_t rc = ESP_OK;
     for (size_t i = 0; i < 12; i++)
     {
@@ -361,7 +365,6 @@ esp_err_t axp_pmic_irq_handle(axp_irq_status_t *dst)
 /*====================write====================*/
 esp_err_t axp_pmic_write_data_ram(axp_data_flash_t dat)
 {
-    uint8_t target_subAddr = 0x04;
     esp_err_t rc = ESP_OK;
     for (size_t i = 0; i < 12; i++)
     {
@@ -1260,7 +1263,6 @@ esp_err_t axp_pmic_set_GPIO_config(axp_gpio_channel_t ch, axp_gpio_config_t cfg)
 esp_err_t axp_pmic_set_interrupt_config(axp_irq_config_t cfg)
 {
     uint8_t tmp[5] = {0x00};
-    uint8_t target_subAddr = 0x40;
     esp_err_t rc = ESP_OK;
 
     for (uint8_t i = 0; i < 5; i++)
@@ -1810,7 +1812,4 @@ esp_err_t axp_pmic_get_coulomb_counter_config(axp_coulomb_counter_config_t *dst)
 
     return rc;
 }
-
-// TODzO:ISR HANDLE
-//
-//
+/*end of file*/
