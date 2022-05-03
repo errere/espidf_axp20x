@@ -310,7 +310,11 @@ esp_err_t axp_pmic_read_data_ram(axp_data_flash_t *dst)
 {
     uint8_t target_subAddr = 0x04;
     esp_err_t rc = ESP_OK;
-    rc = axp_iic_readRegs(target_subAddr, 12, dst->data_flash);
+    for (size_t i = 0; i < 12; i++)
+    {
+        rc = axp_iic_readReg((0x04 + i), &dst->data_flash[i]);
+        AXP_ERROR_CHECK(rc);
+    }
     return rc;
 }
 
@@ -341,8 +345,6 @@ esp_err_t axp_pmic_irq_handle(axp_irq_status_t *dst)
     }
 
     //向相应的状态寄存器位写 1 ,清除相应的中断
-    // rc = axp_iic_writeRegs(target_subAddr, 5, tmp);
-
     rc = axp_iic_writeReg(0x48, tmp[0]);
     AXP_ERROR_CHECK(rc);
     rc = axp_iic_writeReg(0x49, tmp[1]);
@@ -361,7 +363,12 @@ esp_err_t axp_pmic_write_data_ram(axp_data_flash_t dat)
 {
     uint8_t target_subAddr = 0x04;
     esp_err_t rc = ESP_OK;
-    rc = axp_iic_writeRegs(target_subAddr, 12, dat.data_flash);
+    for (size_t i = 0; i < 12; i++)
+    {
+        axp_iic_writeReg((0x04 + i), dat.data_flash[i]);
+        AXP_ERROR_CHECK(rc);
+    }
+
     return rc;
 }
 
@@ -1260,8 +1267,6 @@ esp_err_t axp_pmic_set_interrupt_config(axp_irq_config_t cfg)
     {
         tmp[i] = (cfg.regmap >> (8 * i)) & 0xff;
     }
-    //ESP_LOGI(TAG, "write: %x  %x  %x  %x  %x", tmp[0], tmp[1], tmp[2], tmp[3], tmp[4]);
-    //rc = axp_iic_writeRegs(target_subAddr, 5, tmp);
     rc =axp_iic_writeReg(0x40,tmp[0]);
     AXP_ERROR_CHECK(rc);
     rc =axp_iic_writeReg(0x41,tmp[1]);

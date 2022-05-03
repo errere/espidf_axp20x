@@ -116,7 +116,16 @@ struct
         .bit_config.GPIO2_input_edge_enable = 0,           \
         .bit_config.GPIO1_input_enable = 0,                \
         .bit_config.GPIO0_input_edge_enable = 0            \
-    }                                                      \
+    }
+
+#define AXP_PEK_CONF_DEFAULT         \
+    {                                \
+        .power_on_press_time = 2,    \
+        .long_press_time = 0,        \
+        .long_press_to_shutdown = 1, \
+        .power_ok_singal_delay = 1,  \
+        .power_off_delay = 3         \
+    }
 // types
 
 /*====================READ ONLY====================*/
