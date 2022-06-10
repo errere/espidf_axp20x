@@ -322,6 +322,22 @@ esp_err_t axp_pmic_read_data_ram(axp_data_flash_t *dst)
     return rc;
 }
 
+esp_err_t axp_pmic_read_data_ram_addr(uint8_t addr, uint8_t *dst, uint8_t len)
+{
+    //addr:0...11(0x00->0x0b)
+    if (addr > 11)
+        addr = 11;
+    if (len > (12 - addr))
+        len = (12 - addr);
+    esp_err_t rc = ESP_OK;
+    for (size_t i = 0; i < len; i++)
+    {
+        rc = axp_iic_readReg((0x04 + addr + i), &dst[i]);
+        AXP_ERROR_CHECK(rc);
+    }
+    return rc;
+}
+
 /*====================irq====================*/
 esp_err_t axp_pmic_irq_handle(axp_irq_status_t *dst)
 {
@@ -372,6 +388,22 @@ esp_err_t axp_pmic_write_data_ram(axp_data_flash_t dat)
         AXP_ERROR_CHECK(rc);
     }
 
+    return rc;
+}
+
+esp_err_t axp_pmic_write_data_ram_addr(uint8_t addr, uint8_t *dat, uint8_t len)
+{
+    //addr:0...11(0x00->0x0b)
+    if (addr > 11)
+        addr = 11;
+    if (len > (12 - addr))
+        len = (12 - addr);
+    esp_err_t rc = ESP_OK;
+    for (size_t i = 0; i < len; i++)
+    {
+        rc = axp_iic_writeReg((0x04 + addr + i), dat[i]);
+        AXP_ERROR_CHECK(rc);
+    }
     return rc;
 }
 

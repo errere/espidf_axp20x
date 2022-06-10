@@ -573,10 +573,12 @@ esp_err_t axp_pmic_get_adc_resault(axp_adc_resault_t *dst);
 uint8_t axp_pmic_get_gpio_status(axp_gpio_channel_t ch);
 /*====================read====================*/
 esp_err_t axp_pmic_read_data_ram(axp_data_flash_t *dst);
+esp_err_t axp_pmic_read_data_ram_addr(uint8_t addr, uint8_t *dst, uint8_t len);
 /*====================irq====================*/
 esp_err_t axp_pmic_irq_handle(axp_irq_status_t *dst);
 /*====================write====================*/
 esp_err_t axp_pmic_write_data_ram(axp_data_flash_t dat);
+esp_err_t axp_pmic_write_data_ram_addr(uint8_t addr, uint8_t *dat, uint8_t len);
 esp_err_t axp_pmic_set_power_output(axp_power_output_channel_t ch, axp_power_out_config_t cfg);
 esp_err_t axp_pmic_set_VBUS_IPSOUT_channel_config(axp_VBUS_IPSOUT_channel_config_t cfg);
 esp_err_t axp_pmic_set_VOFF_config(axp_VOFF_config_t cfg);
