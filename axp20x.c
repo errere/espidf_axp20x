@@ -1,5 +1,7 @@
 #include "axp20x.h"
 
+static SemaphoreHandle_t *pSemaphoreIICFree;
+
 #define AXP_NOT(x) ((x)) ? 0 : 1
 #define AXP_ASSERT(x) ((x)) ? 1 : 0
 #define AXP_BIT(x) (1U << (x))
@@ -62,6 +64,11 @@ static esp_err_t axp_checkConnect()
 
 static esp_err_t axp_iic_readReg(uint8_t address, uint8_t *dst)
 {
+    if (*pSemaphoreIICFree != 0)
+    {
+        xSemaphoreTake(*pSemaphoreIICFree, portMAX_DELAY);
+    }
+
 #ifdef AXP_CHECK_CONN
     AXP_ERROR_CHECK(axp_checkConnect);
 #endif
@@ -79,10 +86,20 @@ static esp_err_t axp_iic_readReg(uint8_t address, uint8_t *dst)
     esp_err_t ret = i2c_master_cmd_begin(AXP_IIC_DEV, cmd, portMAX_DELAY);
     i2c_cmd_link_delete(cmd);
 
+    if (*pSemaphoreIICFree != 0)
+    {
+        xSemaphoreGive(*pSemaphoreIICFree);
+    }
+
     return ret;
 }
 static esp_err_t axp_iic_writeReg(uint8_t address, uint8_t src)
 {
+    if (*pSemaphoreIICFree != 0)
+    {
+        xSemaphoreTake(*pSemaphoreIICFree, portMAX_DELAY);
+    }
+
 #ifdef AXP_CHECK_CONN
     AXP_ERROR_CHECK(axp_checkConnect);
 #endif
@@ -95,11 +112,22 @@ static esp_err_t axp_iic_writeReg(uint8_t address, uint8_t src)
 
     esp_err_t ret = i2c_master_cmd_begin(AXP_IIC_DEV, cmd, portMAX_DELAY);
     i2c_cmd_link_delete(cmd);
+
+    if (*pSemaphoreIICFree != 0)
+    {
+        xSemaphoreGive(*pSemaphoreIICFree);
+    }
+
     return ret;
 }
 
 static esp_err_t axp_iic_readRegs(uint8_t address, uint16_t len, uint8_t *dst)
 {
+    if (*pSemaphoreIICFree != 0)
+    {
+        xSemaphoreTake(*pSemaphoreIICFree, portMAX_DELAY);
+    }
+
 #ifdef AXP_CHECK_CONN
     AXP_ERROR_CHECK(axp_checkConnect);
 #endif
@@ -117,6 +145,11 @@ static esp_err_t axp_iic_readRegs(uint8_t address, uint16_t len, uint8_t *dst)
 
     esp_err_t ret = i2c_master_cmd_begin(AXP_IIC_DEV, cmd, portMAX_DELAY);
     i2c_cmd_link_delete(cmd);
+
+    if (*pSemaphoreIICFree != 0)
+    {
+        xSemaphoreGive(*pSemaphoreIICFree);
+    }
 
     return ret;
 }
@@ -1843,5 +1876,10 @@ esp_err_t axp_pmic_get_coulomb_counter_config(axp_coulomb_counter_config_t *dst)
     dst->electricity_counter_pause = AXP_ASSERT_BYTE(tmp, 7);
 
     return rc;
+}
+
+esp_err_t axp_pmic_set_iic_operation_prot_mutex(SemaphoreHandle_t *iic_free){
+    pSemaphoreIICFree = iic_free;
+    return ESP_OK;
 }
 /*end of file*/

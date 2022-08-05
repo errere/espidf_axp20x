@@ -107,7 +107,7 @@ struct
         .bit_config.VBUS_invalid_enable = 0,               \
         .bit_config.VBUS_session_AB_enable = 0,            \
         .bit_config.VBUS_session_end_enable = 0,           \
-        .bit_config.APS_warning_level1_enable = 0,         \
+        .bit_config.APS_warning_level1_enable = 1,         \
         .bit_config.APS_warning_level2_enable = 1,         \
         .bit_config.timeout_enable = 0,                    \
         .bit_config.PEK_raising_enable = 0,                \
@@ -125,6 +125,12 @@ struct
         .long_press_to_shutdown = 1, \
         .power_ok_singal_delay = 1,  \
         .power_off_delay = 3         \
+    }
+
+#define AXP_IPS_WARNING_CONF_DEFAULT \
+    {                                \
+        .level1 = 3600.0f,           \
+        .level2 = 3500.0f            \
     }
 // types
 
@@ -613,4 +619,6 @@ esp_err_t axp_pmic_get_GPIO_config(axp_gpio_channel_t ch, axp_gpio_config_t *dst
 esp_err_t axp_pmic_get_interrupt_config(axp_irq_config_t *dst);
 esp_err_t axp_pmic_get_coulomb_counter_config(axp_coulomb_counter_config_t *dst);
 
+
+esp_err_t axp_pmic_set_iic_operation_prot_mutex(SemaphoreHandle_t *iic_free);
 #endif
