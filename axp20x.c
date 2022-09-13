@@ -1,6 +1,12 @@
 #include "axp20x.h"
 
+#include "esp_log.h"
+#include "esp_system.h"
+
+#include "driver/i2c.h"
+
 static SemaphoreHandle_t *pSemaphoreIICFree;
+static i2c_port_t _axp_iic_num;
 
 #define AXP_NOT(x) ((x)) ? 0 : 1
 #define AXP_ASSERT(x) ((x)) ? 1 : 0
@@ -10,18 +16,17 @@ static SemaphoreHandle_t *pSemaphoreIICFree;
 
 #define AXP_BUILD_I12(m, l) (((m) << 4) | ((l)&0x0f))
 
-#define AXP_ASSERT_BYTE(x, b) \
-    AXP_ASSERT(((x) & (AXP_BIT((b)))))
+#define AXP_ASSERT_BYTE(x, b) AXP_ASSERT(((x) & (AXP_BIT((b)))))
 
-#define AXP_ERROR_CHECK(x)                                                                \
-    do                                                                                    \
-    {                                                                                     \
-        esp_err_t __err_rc__ = (x);                                                       \
-        if (__err_rc__ != ESP_OK)                                                         \
-        {                                                                                 \
-            ESP_LOGE(TAG, "error%d in line:%d  file:%s", __err_rc__, __LINE__, __FILE__); \
-            return __err_rc__;                                                            \
-        }                                                                                 \
+#define AXP_ERROR_CHECK(x)                                                                  \
+    do                                                                                      \
+    {                                                                                       \
+        esp_err_t __err_rc__ = (x);                                                         \
+        if (__err_rc__ != ESP_OK)                                                           \
+        {                                                                                   \
+            ESP_LOGE("TAG", "error%d in line:%d  file:%s", __err_rc__, __LINE__, __FILE__); \
+            return __err_rc__;                                                              \
+        }                                                                                   \
     } while (0)
 
 const static char *TAG = "axp_pmu";
@@ -52,10 +57,10 @@ static esp_err_t axp_checkConnect()
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | WRITE_BIT, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | I2C_MASTER_WRITE, 0x1);
     i2c_master_stop(cmd);
 
-    esp_err_t ret = i2c_master_cmd_begin(AXP_IIC_DEV, cmd, 1);
+    esp_err_t ret = i2c_master_cmd_begin(_axp_iic_num, cmd, 1);
     i2c_cmd_link_delete(cmd);
 
     return ret;
@@ -75,15 +80,15 @@ static esp_err_t axp_iic_readReg(uint8_t address, uint8_t *dst)
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | WRITE_BIT, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, address, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | I2C_MASTER_WRITE, 0x1);
+    i2c_master_write_byte(cmd, address, 0x1);
     // i2c_master_stop(cmd);
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | READ_BIT, ACK_CHECK_EN);
-    i2c_master_read_byte(cmd, dst, NACK_VAL);
+    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | I2C_MASTER_READ, 0x1);
+    i2c_master_read_byte(cmd, dst, I2C_MASTER_NACK);
     i2c_master_stop(cmd);
 
-    esp_err_t ret = i2c_master_cmd_begin(AXP_IIC_DEV, cmd, portMAX_DELAY);
+    esp_err_t ret = i2c_master_cmd_begin(_axp_iic_num, cmd, portMAX_DELAY);
     i2c_cmd_link_delete(cmd);
 
     if (*pSemaphoreIICFree != 0)
@@ -105,12 +110,12 @@ static esp_err_t axp_iic_writeReg(uint8_t address, uint8_t src)
 #endif
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | WRITE_BIT, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, address, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, src, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | I2C_MASTER_WRITE, 0x1);
+    i2c_master_write_byte(cmd, address, 0x1);
+    i2c_master_write_byte(cmd, src, 0x1);
     i2c_master_stop(cmd);
 
-    esp_err_t ret = i2c_master_cmd_begin(AXP_IIC_DEV, cmd, portMAX_DELAY);
+    esp_err_t ret = i2c_master_cmd_begin(_axp_iic_num, cmd, portMAX_DELAY);
     i2c_cmd_link_delete(cmd);
 
     if (*pSemaphoreIICFree != 0)
@@ -134,16 +139,16 @@ static esp_err_t axp_iic_readRegs(uint8_t address, uint16_t len, uint8_t *dst)
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | WRITE_BIT, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, address, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | I2C_MASTER_WRITE, 0x1);
+    i2c_master_write_byte(cmd, address, 0x1);
     // i2c_master_stop(cmd);
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | READ_BIT, ACK_CHECK_EN);
-    // i2c_master_read_byte(cmd, dst, NACK_VAL);
+    i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | I2C_MASTER_READ, 0x1);
+    // i2c_master_read_byte(cmd, dst, I2C_MASTER_NACK);
     i2c_master_read(cmd, dst, len, I2C_MASTER_LAST_NACK);
     i2c_master_stop(cmd);
 
-    esp_err_t ret = i2c_master_cmd_begin(AXP_IIC_DEV, cmd, portMAX_DELAY);
+    esp_err_t ret = i2c_master_cmd_begin(_axp_iic_num, cmd, portMAX_DELAY);
     i2c_cmd_link_delete(cmd);
 
     if (*pSemaphoreIICFree != 0)
@@ -160,12 +165,12 @@ static esp_err_t axp_iic_readRegs(uint8_t address, uint16_t len, uint8_t *dst)
 // #endif
 //     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 //     i2c_master_start(cmd);
-//     i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
-//     i2c_master_write_byte(cmd, address, ACK_CHECK_EN);
-//     // i2c_master_write_byte(cmd, src, ACK_CHECK_EN);
-//     i2c_master_write(cmd, src, len, ACK_CHECK_EN);
+//     i2c_master_write_byte(cmd, (AXP_ADDRESS << 1) | I2C_MASTER_WRITE, 0x1);
+//     i2c_master_write_byte(cmd, address, 0x1);
+//     // i2c_master_write_byte(cmd, src, 0x1);
+//     i2c_master_write(cmd, src, len, 0x1);
 //     i2c_master_stop(cmd);
-//     esp_err_t ret = i2c_master_cmd_begin(AXP_IIC_DEV, cmd, portMAX_DELAY);
+//     esp_err_t ret = i2c_master_cmd_begin(_axp_iic_num, cmd, portMAX_DELAY);
 //     i2c_cmd_link_delete(cmd);
 //     return ret;
 // }
@@ -294,7 +299,7 @@ esp_err_t axp_pmic_get_adc_resault(axp_adc_resault_t *dst)
     dst->battery_discharging_current = (tmp[23] << 5) | (tmp[24] & 0x1f);
     dst->IPS_voltage = AXP_BUILD_I12(tmp[25], tmp[26]);
 
-    //axp209 p25
+    // axp209 p25
     dst->ACIN_voltage = (float)dst->ACIN_voltage * 1.7f;
     dst->ACIN_current = (float)dst->ACIN_current * 0.625f;
     dst->VBUS_voltage = (float)dst->VBUS_voltage * 1.7f;
@@ -303,7 +308,7 @@ esp_err_t axp_pmic_get_adc_resault(axp_adc_resault_t *dst)
     dst->TS = (float)dst->TS * 0.8f;
     dst->GPIO0 = (float)dst->GPIO0 * 0.5f;
     dst->GPIO1 = (float)dst->GPIO1 * 0.5f;
-    //dst->battery_Instantaneous_power = (float)dst->battery_Instantaneous_power * 1.1f;
+    // dst->battery_Instantaneous_power = (float)dst->battery_Instantaneous_power * 1.1f;
     dst->battery_voltage = (float)dst->battery_voltage * 1.1f;
     dst->battery_charging_current = (float)dst->battery_charging_current * 0.5f;
     dst->battery_discharging_current = (float)dst->battery_discharging_current * 0.5f;
@@ -357,7 +362,7 @@ esp_err_t axp_pmic_read_data_ram(axp_data_flash_t *dst)
 
 esp_err_t axp_pmic_read_data_ram_addr(uint8_t addr, uint8_t *dst, uint8_t len)
 {
-    //addr:0...11(0x00->0x0b)
+    // addr:0...11(0x00->0x0b)
     if (addr > 11)
         addr = 11;
     if (len > (12 - addr))
@@ -426,7 +431,7 @@ esp_err_t axp_pmic_write_data_ram(axp_data_flash_t dat)
 
 esp_err_t axp_pmic_write_data_ram_addr(uint8_t addr, uint8_t *dat, uint8_t len)
 {
-    //addr:0...11(0x00->0x0b)
+    // addr:0...11(0x00->0x0b)
     if (addr > 11)
         addr = 11;
     if (len > (12 - addr))
@@ -1334,15 +1339,15 @@ esp_err_t axp_pmic_set_interrupt_config(axp_irq_config_t cfg)
     {
         tmp[i] = (cfg.regmap >> (8 * i)) & 0xff;
     }
-    rc =axp_iic_writeReg(0x40,tmp[0]);
+    rc = axp_iic_writeReg(0x40, tmp[0]);
     AXP_ERROR_CHECK(rc);
-    rc =axp_iic_writeReg(0x41,tmp[1]);
+    rc = axp_iic_writeReg(0x41, tmp[1]);
     AXP_ERROR_CHECK(rc);
-    rc =axp_iic_writeReg(0x42,tmp[2]);
+    rc = axp_iic_writeReg(0x42, tmp[2]);
     AXP_ERROR_CHECK(rc);
-    rc =axp_iic_writeReg(0x43,tmp[3]);
+    rc = axp_iic_writeReg(0x43, tmp[3]);
     AXP_ERROR_CHECK(rc);
-    rc =axp_iic_writeReg(0x44,tmp[4]);
+    rc = axp_iic_writeReg(0x44, tmp[4]);
     return rc;
 }
 
@@ -1878,8 +1883,14 @@ esp_err_t axp_pmic_get_coulomb_counter_config(axp_coulomb_counter_config_t *dst)
     return rc;
 }
 
-esp_err_t axp_pmic_set_iic_operation_prot_mutex(SemaphoreHandle_t *iic_free){
+esp_err_t axp_pmic_set_iic_operation_prot_mutex(SemaphoreHandle_t *iic_free)
+{
     pSemaphoreIICFree = iic_free;
+    return ESP_OK;
+}
+esp_err_t axp_pmic_set_iic_device(i2c_port_t dev)
+{
+    _axp_iic_num = dev;
     return ESP_OK;
 }
 /*end of file*/

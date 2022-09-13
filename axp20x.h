@@ -1,16 +1,19 @@
 #ifndef __BSP_AXP203_H__
 #define __BSP_AXP203_H__
 
-#include "driver/gpio.h"
-#include "driver/i2c.h"
 #include "esp_err.h"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "esp_log.h"
-#include "esp_system.h"
-#include "bsp_iic.h"
 #include <string.h>
+
+//idf release/5.0 : semphr.h mast include with FreeRTOS.h
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+
+#include "driver/i2c.h"
+
 
 // only use for axp203/axp209
 
@@ -29,8 +32,6 @@ struct
 */
 
 /*===========================================================AXP LIB=====================================================*/
-
-#define AXP_IIC_DEV I2C_NUM_0
 
 #define AXP_ADDRESS 0x34
 
@@ -132,6 +133,7 @@ struct
         .level1 = 3600.0f,           \
         .level2 = 3500.0f            \
     }
+
 // types
 
 /*====================READ ONLY====================*/
@@ -621,4 +623,6 @@ esp_err_t axp_pmic_get_coulomb_counter_config(axp_coulomb_counter_config_t *dst)
 
 
 esp_err_t axp_pmic_set_iic_operation_prot_mutex(SemaphoreHandle_t *iic_free);
+esp_err_t axp_pmic_set_iic_device(i2c_port_t dev);
+
 #endif
