@@ -3,7 +3,6 @@
 #include "esp_log.h"
 #include "esp_system.h"
 
-#include "driver/i2c.h"
 
 static SemaphoreHandle_t *pSemaphoreIICFree;
 static i2c_port_t _axp_iic_num;
