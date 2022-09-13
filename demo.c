@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2010-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: CC0-1.0
+ */
 
 #include <stdio.h>
 #include "sdkconfig.h"
@@ -49,7 +54,7 @@ static void pmic_init()
     powerOut.voltage = 3300; // 3v3
     powerOut.vrc_enable = 0; // disable
     powerOut.vrc_config = 0; // 1.6mv/s
-    // power down 
+    // power down adc and pa
     axp_pmic_set_power_output(AXP_LDO2, powerOut);
     axp_pmic_set_power_output(AXP_LDO4, powerOut);
     // off not use channel
